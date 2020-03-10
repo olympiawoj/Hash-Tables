@@ -38,6 +38,7 @@ class HashTable:
 
     #Leading underscore means DONT USE IT outside of the class, private
     #In python unlike other languages, is there anything preventing u from using it outside of a class? No
+
     def _hash_djb2(self, key):
         '''
         Hash an arbitrary key using DJB2 hash
@@ -54,25 +55,27 @@ class HashTable:
         '''
         return self._hash(key) % self.capacity
 
-
     def insert(self, key, value):
         '''
         Store the value with the given key.
         Hash collisions should be handled with Linked List Chaining.
         Fill this in.
-
-
         '''
-        #1) Find the index ->  take key and hash it to turn it into an index in our array 
         index = self._hash_mod(key)
+        current_value = self.storage[index]
 
-        #2) Check of an error
-        if self.storage[index] is not None:
-            print("ERROR: Key in use")
+        # if there is a node that already exists with same key
+        if current_value is not None:
+            print("Collision occured")
+
+            # create new key,value pair
+            newLinkPair = LinkedPair(key, value)
+            newLinkPair.next = self.storage[index]
+            self.storage[index] = newLinkPair
+        # if node with same key doesn't already exist
+        # create link pair and add to storage
         else:
-            #put it there
             self.storage[index] = LinkedPair(key, value)
-
 
 
     def remove(self, key):
@@ -85,8 +88,10 @@ class HashTable:
         '''
 
         index = self._hash_mod(key)
+
         if self.storage[index] is not None:
             self.storage[index] = None 
+        #if key cant be found, print 
         else:
             print("WARNING: Key not found")
         
@@ -101,8 +106,18 @@ class HashTable:
         Fill this in.
         '''
         index = self._hash_mod(key)
-        return self.storage[index]
+        item = self.storage[index]
 
+        if item is None:
+            return None 
+        
+        while item:
+            if item.key is not key:
+                item = item.next 
+            else:
+                return item.value 
+        return None
+ 
 
     def resize(self):
         '''
@@ -115,15 +130,17 @@ class HashTable:
         When we modulus  hash of key, we'll get new numbers. We need to rehash everything when we resize, otherwise everything will be in the wrong place 
         '''
         # old_storage = self.storage.copy() - so its not pointing to the same address
-        old_storage = self.storage
+        old_storage = self.storage.copy()
         #double capacity
         self.capacity = self.capacity * 2
         #make new storage
         self.storage = [None] * self.capacity
         #old storage is an array with no key or value, 
         for bucket_item in old_storage:
-            #places everything in new 
-            self.insert(bucket_item.key, bucket_item.value)
+            while bucket_item is not None:
+                #places everything in new 
+                self.insert(bucket_item.key, bucket_item.value)
+                bucket_item = bucket_item.next
 
 
 
